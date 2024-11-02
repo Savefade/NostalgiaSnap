@@ -7,6 +7,7 @@ if(!isset($_POST["username"]) || !isset($_POST["req_token"]) || !isset($_POST["t
 $getUserData = doLogin($_POST["username"]);
 isTokenValidReqToken($_POST["req_token"], $_POST["timestamp"], $getUserData["AuthToken"]);
 $getUsersFriends = getFriends($_POST["username"]);
+$getSnaps = getSnaps($getUserData, $getUsersFriends["blocked_usernames"]);
 //json
 $getUsersFriends["friends"][] = array(
 	"can_see_custom_stories" => true,
@@ -25,21 +26,11 @@ die(json_encode(array(
     "added_friends" => $getUsersFriends["added_friends"],
     "beta_expiration" => 0,
     "beta_number" => -1,
-    "requests" => $getUsersFriends["added_friends"],
+    "requests" => [], // todo create a proper sync api for ph
     "sent" => 0,
     "story_privacy" => "FRIENDS",
     "username" => $_POST["username"],
-    "snaps" => array(
-       // array(
-       //     "id" => "325924384416555224r",
-       //     "sn" => "teamsnapchat",
-       //     "t" => 10,
-       //     "ts" => 1384416555224,
-       //     "sts" => 1384416555224,
-       //     "m" => 0,
-       //     "st" => 1
-       // )
-    ),
+    "snaps" => $getSnaps,
     "friends" => $getUsersFriends["friends"],
      //2 blocked // 1 pending // 0 friend
     "device_token" => "",
@@ -53,7 +44,7 @@ die(json_encode(array(
     "auth_token" => $getUserData["AuthToken"],
     "image_caption" => false,
     "is_beta" => false,
-    "current_timestamp" => 0,
+    "current_timestamp" => time() * 1000,
     "can_view_mature_content" => false,
     "email" => $getUserData["Email"],
     "should_send_text_to_verify_number" => $sendSMSToVerifyNumber,

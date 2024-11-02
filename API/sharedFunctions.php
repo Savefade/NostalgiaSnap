@@ -12,6 +12,16 @@ function doLogin($username){
 	return $getUserData;
 }
 
+function doesUsernameMeetRequirements($username){
+	if(!ctype_alnum($username)){
+		sendErrorJSONToClient('Usernames can only contain a-z,A-Z and 0-9 characters!');
+	}
+	if(strlen($username) > 15 || strlen($username) < 3){
+		sendErrorJSONToClient('Usernames can only be 3-15 characters!');
+	}
+	return true;
+}
+
 function doesUserExist($username){
 	include "Config.php";
 	$RetrieveUserData = $RetrieveDBData->prepare("SELECT * FROM Accounts WHERE Username = ? LIMIT 1");
@@ -40,19 +50,19 @@ function legacyRefresh($token, $username){
 
 function updateToken($token, $username){
 	include "Config.php";
-	$RetrieveUserData = $RetrieveDBData->prepare("UPDATE Accounts SET AuthToken = ? WHERE Username = ? LIMIT 1");
-	$RetrieveUserData->bind_param("ss", $token, $username);
-	$RetrieveUserData->execute();
+	$UpdateUserData = $RetrieveDBData->prepare("UPDATE Accounts SET AuthToken = ? WHERE Username = ? LIMIT 1");
+	$UpdateUserData->bind_param("ss", $token, $username);
+	$UpdateUserData->execute();
 	return;
 }
 
 function updateTokenUsingEmail($token, $email){
 	include "Config.php";
-	$RetrieveUserData = $RetrieveDBData->prepare("UPDATE Accounts SET AuthToken = ? WHERE Username = ? LIMIT 1");
-	$RetrieveUserData->bind_param("ss", $token, $email);
-	$RetrieveUserData->execute();
+	$UpdateUserData = $RetrieveDBData->prepare("UPDATE Accounts SET AuthToken = ? WHERE Username = ? LIMIT 1");
+	$UpdateUserData->bind_param("ss", $token, $email);
+	$UpdateUserData->execute();
 	return;
-}
+} //might be removed
 
 function doRegister($email, $password, $age, ...$moredata){
 	include "Config.php";
@@ -60,11 +70,11 @@ function doRegister($email, $password, $age, ...$moredata){
 		$sanitisedUsername = strtolower($email);
 		$salt = md5(rand(0, 2147483646));
 		$hashedPassword = password_hash($salt . $password . $salt, PASSWORD_BCRYPT);
-		$RetrieveUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `PhoneNumber`, `Salt`, `Password`, `AuthToken`) VALUES (NULL, '', '', ?, '', ?, ?, '');");
-		$RetrieveUserData->bind_param("sss", $email, $salt, $hashedPassword);
-		$RetrieveUserData->execute();
+		$UploadUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `PhoneNumber`, `Salt`, `Password`, `AuthToken`) VALUES (NULL, '', '', ?, '', ?, ?, '');");
+		$UploadUserData->bind_param("sss", $email, $salt, $hashedPassword);
+		$UploadUserData->execute();
 	}else{
-		sendErrorJSONToClient($EmailIsInUseErrorMessage);
+		sendErrorJSONToClient($emailIsInUseErrorMessage);
 	}
 	return;
 }
@@ -72,12 +82,12 @@ function doRegister($email, $password, $age, ...$moredata){
 function doRegisterPicaboo($username, $password){
 	include "Config.php";
     if(!checkIfEmailOrUsernameIsInUse($username)){
-		$sanitisedUsername = strtolower($username);
+		$lowerCaseUsername = strtolower($username);
 		$salt = md5(rand(0, 2147483646));
 		$hashedPassword = password_hash($salt . $password . $salt, PASSWORD_BCRYPT);
-		$RetrieveUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `Salt`, `Password`, `AuthToken`) VALUES (NULL, ?, ?, '', ?, ?, '');");
-		$RetrieveUserData->bind_param("ssss", $sanitisedUsername, $username, $salt, $hashedPassword);
-		$RetrieveUserData->execute();
+		$UploadUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `Salt`, `Password`, `AuthToken`) VALUES (NULL, ?, ?, '', ?, ?, '');");
+		$UploadUserData->bind_param("ssss", $lowerCaseUsername, $username, $salt, $hashedPassword);
+		$UploadUserData->execute();
 	}else{
 		sendErrorJSONToClient($usernameIsInUseErrorMessage);
 	}
@@ -98,9 +108,10 @@ function checkIfEmailOrUsernameIsInUse($username){
 
 function setUsername($email, $username){
 	include "Config.php";
-	$RetrieveUserData = $RetrieveDBData->prepare('UPDATE Accounts SET Username = ? WHERE email = ? && Username = "" LIMIT 1');
-	$RetrieveUserData->bind_param("ss", $username, $email);
-	$RetrieveUserData->execute();
+	$lowerCaseUsername = strtolower($username);
+	$UpdateUserData = $RetrieveDBData->prepare('UPDATE Accounts SET Username = ? && Nickname = ? WHERE email = ? && Username = "" LIMIT 1');
+	$UpdateUserData->bind_param("sss", $lowerCaseUsername, $username, $email);
+	$UpdateUserData->execute();
 	return;
 }
 
@@ -125,7 +136,7 @@ function isTokenValidReqToken($req_token, $timestamp, $dbToken){
 
 function getFriends($username){
 	include "Config.php";
-    $friendsArray = array("friends" => array(), "added_friends" => array());
+    $friendsArray = array("friends" => array(), "added_friends" => array(), "blocked_usernames" => array());
 	$RetrieveFriends = $RetrieveDBData->prepare("SELECT * FROM Friends WHERE AddedByUsername = ? || AddedUsername = ?");
 	$RetrieveFriends->bind_param("ss", $username, $username);
 	$RetrieveFriends->execute();
@@ -141,6 +152,7 @@ function getFriends($username){
 		$nicknames = json_decode($friend["NicknamesJSON"], true);
 		switch ($type[$friendPlacement]){
 			case 2:
+		    $friendsArray["blocked_usernames"][] = $friendUsername;
 			case 0:
 				$friendsArray["friends"][] = array(
 				"can_see_custom_stories" => true,
@@ -170,23 +182,23 @@ function getFriends($username){
 	return $friendsArray;
 }
 
-function updateMyNickname($username, $newNickname){
+function getFriend($getUserData, $friendUsername){
 	include "Config.php";
-	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE Accounts SET Nickname = ? WHERE Username = ? LIMIT 1;");
-	$RetrieveFriends->bind_param("ss", $newNickname, $username);
-	$RetrieveFriends->execute();
-	die(json_encode(array(
-	    "logged" => true,
-		"message" => "Done!",
-	)));
+	$RetrieveFriend = $RetrieveDBData->prepare("SELECT * FROM `friends` WHERE AddedByUsername = ? && AddedUsername = ? || AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
+	$RetrieveFriend->bind_param("ssss", $getUserData["Username"], $friendUsername, $friendUsername, $getUserData["Username"]);
+	$RetrieveFriend->execute();
+	$dbResult = $RetrieveFriend->get_result();
+	if($dbResult->num_rows == 0){
+		sendErrorJSONToClient("Friend not found!");
+	}
+	return $dbResult->fetch_assoc();
 }
 
-function getFriendsLegacy($username){
+function getFriendsLegacy($username){ //to be fixed
 	include "Config.php";
     $friendsArray = array($username);
-	$usernameWithBrackets = '%"' . $username . '"%';
 	$RetrieveFriends = $RetrieveDBData->prepare("SELECT * FROM Friends WHERE WHERE AddedByUsername = ? || AddedUsername = ?");
-	$RetrieveFriends->bind_param("s", $usernameWithBrackets);
+	$RetrieveFriends->bind_param("ss", $username, $username);
 	$RetrieveFriends->execute();
 	$dbResult = $RetrieveFriends->get_result();
  	while($friend = $dbResult->fetch_assoc()){
@@ -197,8 +209,7 @@ function getFriendsLegacy($username){
 		    $friendPlacement = 1;
 		}
 		$type = json_decode($friend["TypeJSON"], true);
-		$friendPlacement = ($placement == 1)?  0: 1;
-		if($type[$placement] != 2){
+		if($type[$friendPlacement] != 2){
 			$friendsArray[] = $friendUsername;
 		}
 	}
@@ -250,7 +261,6 @@ function isThereAFriendRequestSendByMe($getUserData, $friendUsername){
 
 function acceptFriendRequest($getUserData, $friendUsername){
 	include "Config.php";
-	$usernamesJSON = '[\"'. htmlspecialchars($friendUsername) .'\",\"'. $getUserData["Username"] .'\"]';
 	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE `friends` SET `TypeJSON` = '[\"0\",\"0\"]' WHERE `TypeJSON` = '[\"1\",\"3\"]' && AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
 	$RetrieveFriends->bind_param("ss", $friendUsername, $getUserData["Username"]);
 	$RetrieveFriends->execute();
@@ -262,9 +272,10 @@ function acceptFriendRequest($getUserData, $friendUsername){
 
 function blockFriend($getUserData, $friendUsername){
 	include "Config.php";
-	$usernamesJSON = '[\"'. htmlspecialchars($friendUsername) .'\",\"'. $getUserData["Username"] .'\"]';
-	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE `friends` SET `TypeJSON` = '[\"0\",\"0\"]' WHERE `TypeJSON` = '[\"1\",\"3\"]' && AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
-	$RetrieveFriends->bind_param("ss", $friendUsername, $getUserData["Username"]);
+	$friendshipData = getFriend($getUserData, $friendUsername);
+	$typeJSON = ($friendshipData["AddedByUsername"] == $friendUsername)?  '[\"1\",\"2\"]': '[\"2\",\"1\"]';
+	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE `friends` SET `TypeJSON` = '$typeJSON' WHERE `TypeJSON` = '[\"0\",\"0\"]' && AddedByUsername = ? && AddedUsername = ? || `TypeJSON` = '[\"0\",\"0\"]' && AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
+	$RetrieveFriends->bind_param("ssss", $friendUsername, $getUserData["Username"], $getUserData["Username"], $friendUsername);
 	$RetrieveFriends->execute();
 		die(json_encode(array(
 	    "logged" => true,
@@ -272,6 +283,110 @@ function blockFriend($getUserData, $friendUsername){
 	)));
 }
 
+function unblockFriend($getUserData, $friendUsername){
+	include "Config.php";
+	$friendshipData = getFriend($getUserData, $friendUsername);
+	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE `friends` SET `TypeJSON` = '[\"0\",\"0\"]' WHERE `TypeJSON` = '[\"1\",\"2\"]' && AddedByUsername = ? && AddedUsername = ? || `TypeJSON` = '[\"2\",\"1\"]' && AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
+	$RetrieveFriends->bind_param("ssss", $friendUsername, $getUserData["Username"], $getUserData["Username"], $friendUsername);
+	$RetrieveFriends->execute();
+		die(json_encode(array(
+	    "logged" => true,
+		"message" => "Unblocked!",
+	)));
+}
+
 function deleteFriend($getUserData, $friendUsername){
 	include "Config.php";
+	$RetrieveFriends = $RetrieveDBData->prepare("DELETE FROM `friends` WHERE AddedByUsername = ? && AddedUsername = ? || AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
+	$RetrieveFriends->bind_param("ssss", $friendUsername, $getUserData["Username"], $getUserData["Username"], $friendUsername);
+	$RetrieveFriends->execute();
+		die(json_encode(array(
+	    "logged" => true,
+		"message" => "Removed!",
+	)));
+}
+
+
+function updateMyNickname($getUserData, $newNickname){
+	include "Config.php";
+	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE Accounts SET Nickname = ? WHERE Username = ? LIMIT 1;");
+	$RetrieveFriends->bind_param("ss", $newNickname, $username["Username"]);
+	$RetrieveFriends->execute();
+	die(json_encode(array(
+	    "logged" => true,
+		"message" => "Done!",
+	)));
+}
+
+function updateFriendNickname($getUserData, $friendUsername, $newNickname){
+	include "Config.php";
+	$friendshipData = getFriend($getUserData, $friendUsername);
+	$nicknames = json_decode($friendshipData["NicknamesJSON"], true);
+		$placement = 1;
+    if($friendshipData["AddedByUsername"] == $getUserData["Username"]){
+	    $placement = 0;
+	}
+	$nicknames[$placement] = $newNickname;
+	$nicknameJSON = json_encode($nicknames);
+	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE Friends SET NicknamesJSON = '$nicknameJSON' WHERE AddedByUsername = ? && AddedUsername = ? || AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
+	$RetrieveFriends->bind_param("ssss", $friendUsername, $getUserData["Username"], $getUserData["Username"], $friendUsername);
+	$RetrieveFriends->execute();
+	die(json_encode(array(
+	   "logged" => true,
+	   "message" => "Done!",
+	)));
+}
+
+function getSnaps($getUserData, $blockedUsernames){
+	include "Config.php";
+	$snaps = array();
+	$snapArray = array();
+	$sanitisedBlockedUsernames = substr(json_encode($blockedUsernames), 1, -1);
+	if(!empty($sanitisedBlockedUsernames)){
+		$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `snaps` WHERE ( recipient = ? || sender = ?) && sender NOT IN($sanitisedBlockedUsernames);");
+    }else{
+		$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `snaps` WHERE recipient = ? || sender = ?");
+	}   
+	$RetrieveSnaps->bind_param("ss", $getUserData["Username"], $getUserData["Username"]);
+	$RetrieveSnaps->execute();
+	$dbResult = $RetrieveSnaps->get_result();
+	while($snap = $dbResult->fetch_assoc()){
+		$state = json_decode($snap["StateJSON"], true);
+		$isSnapMine = ($snap["Sender"] == $getUserData["Username"])? true : false;
+		if($isSnapMine){
+			$snapArray = array(
+             "c_id" => $snap["BlobID"],
+             "rp" => $snap["Recipient"],
+             "ts" => $snap["Timestamp"] * 1000,
+             "sts" => $snap["Timestamp"] * 1000,
+             //"m" => $snap["MediaType"],
+             "st" => $state[0]   //to be fixed
+        );
+		}
+		if($snap["Recipient"] == $getUserData["Username"]){
+			$snapArray = array(
+            "id" => $snap["BlobID"],
+            "sn" => $snap["Sender"],
+            "t" => $snap["ViewingTime"],
+            "ts" => $snap["Timestamp"] * 1000,
+            "sts" => $snap["Timestamp"] * 1000,
+            "m" => $snap["MediaType"],
+            "st" => $state[0] 
+           );
+		}
+		if(isset($state[1])){
+				$snapArray["c"] = $state[1];
+		}
+		$snaps[] = $snapArray;
+	}
+    return $snaps;
+}
+
+function getSnapData($ID){ //this uses either the blob id or mediaid
+	include "Config.php";
+	$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `snaps` WHERE ( BlobID = ? || MediaID = ?) LIMIT 1;");
+	$RetrieveSnaps->bind_param("ss", $ID, $ID);
+	$RetrieveSnaps->execute();
+	$snap = $RetrieveSnaps->get_result()->fetch_assoc();
+    return $snap;
 }

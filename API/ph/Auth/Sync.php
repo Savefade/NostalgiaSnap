@@ -1,16 +1,14 @@
 <?php
 include "../../Config.php";
 include "../../sharedFunctions.php";
-if(!isset($_POST["username"]) || !isset($_POST["password"])){
+if(!isset($_POST["username"]) || !isset($_POST["req_token"]) || !isset($_POST["timestamp"])){
 	exit;
 }
-
-// Userdata
 $getUserData = doLogin($_POST["username"]);
+isTokenValidReqToken($_POST["req_token"], $_POST["timestamp"], $getUserData["AuthToken"]);
 $getUsersFriends = getFriends($_POST["username"]);
-$token = md5(rand(0, 2147483646) . time());
-updateToken($token, $getUserData["Username"]);
-// json
+$getSnaps = getSnaps($getUserData, $getUsersFriends["blocked_usernames"]);
+//json
 $getUsersFriends["friends"][] = array(
 	"can_see_custom_stories" => true,
     "name" => $getUserData["Username"],
@@ -28,22 +26,11 @@ die(json_encode(array(
     "added_friends" => $getUsersFriends["added_friends"],
     "beta_expiration" => 0,
     "beta_number" => -1,
-    "requests" => array(
-    ),
+    "requests" => $getUsersFriends["added_friends"], // todo create a proper sync api for ph
     "sent" => 0,
     "story_privacy" => "FRIENDS",
     "username" => $_POST["username"],
-    "snaps" => array(
-       // array(
-       //     "id" => "325924384416555224r",
-       //     "sn" => "teamsnapchat",
-       //     "t" => 10,
-       //     "ts" => 1384416555224,
-       //     "sts" => 1384416555224,
-       //     "m" => 0,
-       //     "st" => 1
-       // )
-    ),
+    "snaps" => $getSnaps,
     "friends" => $getUsersFriends["friends"],
      //2 blocked // 1 pending // 0 friend
     "device_token" => "",
@@ -54,7 +41,7 @@ die(json_encode(array(
     "added_friends_timestamp" => 0,
     "notification_sound_setting" => "OFF",
     "snapchat_phone_number" => "+15557350485",
-    "auth_token" => $token,
+    "auth_token" => $getUserData["AuthToken"],
     "image_caption" => false,
     "is_beta" => false,
     "current_timestamp" => time() * 1000,
@@ -63,4 +50,3 @@ die(json_encode(array(
     "should_send_text_to_verify_number" => $sendSMSToVerifyNumber,
     "mobile" => $getUserData["PhoneNumber"]
 )));
-?>

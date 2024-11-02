@@ -6,9 +6,12 @@ if(!isset($_POST["email"]) || !isset($_POST["username"]) || !isset($_POST["req_t
 }
 $getUserData = doLogin($_POST["email"]);
 isTokenValidReqToken($_POST["req_token"], $_POST["timestamp"], "m198sOkJEn37DjqZ32lpRu76xmw288xSQ9");
+doesUsernameMeetRequirements($_POST["username"]);
 if(checkIfEmailOrUsernameIsInUse($_POST["username"])){
 	sendErrorJSONToClient($usernameIsInUseErrorMessage);
 }
+$token = generateToken();
+updateTokenUsingEmail($token, $_POST["email"]);
 setUsername($_POST["email"], $_POST["username"]);
 
 die(json_encode(array(
@@ -103,7 +106,7 @@ die(json_encode(array(
     "added_friends_timestamp" => 0,
     "notification_sound_setting" => "OFF",
     "snapchat_phone_number" => "+15557350485",
-    "auth_token" => $getUserData["AuthToken"],
+    "auth_token" => $token,
     "image_caption" => false,
     "is_beta" => false,
     "current_timestamp" => 0,

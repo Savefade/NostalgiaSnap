@@ -17,16 +17,25 @@ switch ($_POST["action"]){
 		else{
 			acceptFriendRequest($getUserData, $friendUsername);
 		}
-	break;
+		break;
+	case "delete":
+		deleteFriend($getUserData, $friendUsername);
+		break;
 	case "display":
 		if(isset($_POST["display"])){
 			if($getUserData["Username"] != $_POST["friend"]){
-				sendErrorJSONToClient("Not implemented!");
+				updateFriendNickname($getUserData, $friendUsername, $_POST["display"]);
 			}
-			updateMyNickname($getUserData["Username"], $_POST["display"]);
+			updateMyNickname($getUserData, $_POST["display"]);
 		}
-	break;
+		break;
+	case "block":
+		blockFriend($getUserData, $friendUsername);
+		break;
+	case "unblock":
+		unblockFriend($getUserData, $friendUsername);
+		break;
 	default:
 		sendErrorJSONToClient("Not implemented!");
-	break;
+		break;
 }

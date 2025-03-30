@@ -1,7 +1,7 @@
 <?php
 include "../../Config.php";
 include "../../sharedFunctions.php";
-if(!isset($_POST["u"]) || !isset($_POST["t"]) || !isset($_POST["s"])){ //$_POST["u"] is the username and t is either a authtoken or the password. a is the action
+if(!isset($_POST["u"]) || !isset($_POST["t"])){ //$_POST["u"] is the username and t is either a authtoken or the password. a is the action
 	exit;
 }
 
@@ -11,7 +11,7 @@ $token = "";
 $token = $_POST["t"];
 $getUserData = legacyRefresh($_POST["t"], $_POST["u"]);
 $contactsList = getFriendsLegacy($getUserData["Username"]);
-$picaboos = getPicaboos($getUserData);
+$picaboos = getSS2Picaboos($getUserData);
 // json
 die(json_encode(array(
 	"logged" => true,
@@ -19,6 +19,12 @@ die(json_encode(array(
 	"token" => $token,
 	"contacts" => $contactsList,
 	"picaboos" => $picaboos,
-	"message" => "",
+	"bests" => $contactsList,
+	"blocked" => array(),
+	"mobile" => "test",
+	"rec" => [],
+	"s" => 0,
+	"r" => 0,
+	"message" => "", //force logout message: auth logged: false
 	)));
 	

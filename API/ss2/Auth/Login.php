@@ -40,7 +40,7 @@ switch($_POST["a"]){
 	sendErrorJSONToClient("unknown action");
 }
 $contactsList = getFriendsLegacy($getUserData["Username"]);
-$picaboos = getPicaboos($getUserData);
+$picaboos = getSS2Picaboos($getUserData);
 // json
 die(json_encode(array(
 	"logged" => true,
@@ -49,7 +49,8 @@ die(json_encode(array(
 	"contacts" => $contactsList,
 	"bests" => $contactsList,
 	"picaboos" => $picaboos,
-	
+	"s" => 1,
+	"r" => 2,
 	"message" => "",
 	)));
 	

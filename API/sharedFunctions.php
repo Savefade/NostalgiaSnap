@@ -42,7 +42,7 @@ function legacyRefresh($token, $username){
 	$RetrieveUserData->execute();
 	$RetrivalResult = $RetrieveUserData->get_result();
 	if($RetrivalResult->num_rows == 0){
-		send401ErrorJSONToClient($incorrectPasswordMessage);
+		send401ErrorJSONToClient("auth");
 	}
 	$getUserData = $RetrivalResult->fetch_assoc();
 	return $getUserData;
@@ -109,7 +109,7 @@ function checkIfEmailOrUsernameIsInUse($username){
 function setUsername($email, $username){
 	include "Config.php";
 	$lowerCaseUsername = strtolower($username);
-	$UpdateUserData = $RetrieveDBData->prepare('UPDATE Accounts SET Username = ? && Nickname = ? WHERE email = ? && Username = "" LIMIT 1');
+	$UpdateUserData = $RetrieveDBData->prepare('UPDATE Accounts SET Username = ?, Nickname = ? WHERE email = ? AND Username = "" LIMIT 1');
 	$UpdateUserData->bind_param("sss", $lowerCaseUsername, $username, $email);
 	$UpdateUserData->execute();
 	return;
@@ -197,7 +197,7 @@ function getFriend($getUserData, $friendUsername){
 function getFriendsLegacy($username){ //to be fixed
 	include "Config.php";
     $friendsArray = array($username);
-	$RetrieveFriends = $RetrieveDBData->prepare("SELECT * FROM Friends WHERE WHERE AddedByUsername = ? || AddedUsername = ?");
+	$RetrieveFriends = $RetrieveDBData->prepare("SELECT * FROM Friends WHERE AddedByUsername = ? || AddedUsername = ?");
 	$RetrieveFriends->bind_param("ss", $username, $username);
 	$RetrieveFriends->execute();
 	$dbResult = $RetrieveFriends->get_result();
@@ -372,6 +372,78 @@ function getSnaps($getUserData, $blockedUsernames){
             "sts" => $snap["Timestamp"] * 1000,
             "m" => $snap["MediaType"],
             "st" => $state[0] 
+           );
+		}
+		if(isset($state[1])){
+				$snapArray["c"] = $state[1];
+		}
+		$snaps[] = $snapArray;
+	}
+    return $snaps;
+}
+
+function getPicaboos($getUserData){
+	include "Config.php";
+	$snaps = array();
+	$snapArray = array();
+	$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `snaps` WHERE (recipient = ? || sender = ?) && MediaType = 0"); 
+	$RetrieveSnaps->bind_param("ss", $getUserData["Username"], $getUserData["Username"]);
+	$RetrieveSnaps->execute();
+	$dbResult = $RetrieveSnaps->get_result();
+	while($snap = $dbResult->fetch_assoc()){
+		$state = json_decode($snap["StateJSON"], true);
+		$isSnapMine = ($snap["Sender"] == $getUserData["Username"])? true : false;
+		if($isSnapMine){
+			$snapArray = array(
+			 "id" => $snap["BlobID"],
+			 "recipient" => $snap["Recipient"],
+			 "viewed" => $snap["Timestamp"] * 1000 //time when vied
+			);
+		}
+		if($snap["Recipient"] == $getUserData["Username"]){
+			$snapArray = array(
+            "id" => $snap["BlobID"],
+			"sender" => $snap["Sender"],
+            "timer" => $snap["ViewingTime"],
+            "sent" => $snap["Timestamp"] * 1000,
+            "st" => $state[0] 
+           );
+		}
+		if(isset($state[1])){
+				$snapArray["c"] = $state[1];
+		}
+		$snaps[] = $snapArray;
+	}
+    return $snaps;
+}
+
+function getSS2Picaboos($getUserData){
+	include "Config.php";
+	$snaps = array();
+	$snapArray = array();
+	$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `snaps` WHERE (recipient = ? || sender = ?) && MediaType = 0"); 
+	$RetrieveSnaps->bind_param("ss", $getUserData["Username"], $getUserData["Username"]);
+	$RetrieveSnaps->execute();
+	$dbResult = $RetrieveSnaps->get_result();
+	while($snap = $dbResult->fetch_assoc()){
+		$state = json_decode($snap["StateJSON"], true);
+		$isSnapMine = ($snap["Sender"] == $getUserData["Username"])? true : false;
+		if($isSnapMine){
+			$snapArray = array(
+            "id" => $snap["BlobID"],
+            "rp" => $snap["Recipient"],
+            "t" => $snap["ViewingTime"],
+            "v" => $snap["Timestamp"] * 1000,
+            "s" => $state[0] 
+           );
+		}
+		if($snap["Recipient"] == $getUserData["Username"]){
+			$snapArray = array(
+            "id" => $snap["BlobID"],
+            "sn" => $snap["Sender"],
+            "t" => $snap["ViewingTime"],
+            "v" => $snap["Timestamp"] * 1000,
+            "s" => $state[0] 
            );
 		}
 		if(isset($state[1])){

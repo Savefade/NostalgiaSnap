@@ -1,6 +1,6 @@
 <?php
-include "../../Config.php";
-include "../../sharedFunctions.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
 if(!isset($_GET["u"]) || !isset($_GET["t"]) || !isset($_GET["i"])){
 	exit;
 }
@@ -18,6 +18,6 @@ if($dbResult->num_rows == 0){
 }
 $getBlobData = $dbResult->fetch_assoc();
 
-if(file_exists("../../../Storage/BlobID_" . $getBlobData["BlobID"])){
-	die(file_get_contents("../../../Storage/BlobID_" . $getBlobData["BlobID"]));
+if(file_exists($_SERVER['DOCUMENT_ROOT'] . "/Storage/BlobID_" . $getBlobData["BlobID"])){
+	die(file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/Storage/BlobID_" . $getBlobData["BlobID"]));
 }

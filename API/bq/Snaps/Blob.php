@@ -1,6 +1,6 @@
 <?php
-include "../../Config.php";
-include "../../sharedFunctions.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
 if(!isset($_POST["id"]) || !isset($_POST["req_token"]) || !isset($_POST["timestamp"]) || !isset($_POST["username"])){
 	exit;
 }
@@ -19,6 +19,6 @@ if($dbResult->num_rows == 0){
 }
 $getBlobData = $dbResult->fetch_assoc();
 
-if(file_exists("../../../Storage/BlobID_" . $getBlobData["BlobID"])){
-	die(file_get_contents("../../../Storage/BlobID_" . $getBlobData["BlobID"]));
+if(file_exists($_SERVER['DOCUMENT_ROOT'] . "/Storage/BlobID_" . $getBlobData["BlobID"])){
+	die(file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/Storage/BlobID_" . $getBlobData["BlobID"]));
 }

@@ -1,6 +1,6 @@
 <?php
-include "../../Config.php";
-include "../../sharedFunctions.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
 if(!isset($_POST["email"]) || !isset($_POST["username"]) || !isset($_POST["req_token"]) || !isset($_POST["timestamp"])){
 	exit;
 }

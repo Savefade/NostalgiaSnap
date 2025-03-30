@@ -1,6 +1,6 @@
 <?php
-include "../../Config.php";
-include "../../sharedFunctions.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
 
 if(!isset($_POST["added_friends_timestamp"]) || !isset($_POST["events"]) || !isset($_POST["req_token"]) || !isset($_POST["json"]) || !isset($_POST["timestamp"]) || !isset($_POST["username"])){
 	exit;

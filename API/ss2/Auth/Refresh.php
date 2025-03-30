@@ -1,6 +1,6 @@
 <?php
-include "../../Config.php";
-include "../../sharedFunctions.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
+include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
 if(!isset($_POST["u"]) || !isset($_POST["t"])){ //$_POST["u"] is the username and t is either a authtoken or the password. a is the action
 	exit;
 }

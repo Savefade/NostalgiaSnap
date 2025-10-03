@@ -35,7 +35,8 @@ CREATE TABLE `accounts` (
   `PhoneNumber` text NOT NULL,
   `Salt` text NOT NULL,
   `Password` text NOT NULL,
-  `AuthToken` text NOT NULL
+  `AuthToken` text NOT NULL,
+  `DeviceID` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 -- Структура на таблица `friends`

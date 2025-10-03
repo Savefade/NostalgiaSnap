@@ -9,7 +9,7 @@ $maintenanceBypassUserAgents = [];
 $DBURL = "127.0.0.1";
 $DBusername = "root";
 $DBpassword = "";
-$DBname = "LegacySnapDB";
+$DBname = "nostalgiasnapdb";
 $RetrieveDBData = new mysqli($DBURL, $DBusername, $DBpassword, $DBname);
 // API Manager
 $loqEnabled = true;

@@ -1,13 +1,13 @@
 <?php
 include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
 include $_SERVER['DOCUMENT_ROOT'] . "/API/SharedFunctions.php";
-if(!isset($_POST["email"]) || !isset($_POST["password"]) || !isset($_POST["birthday"]) || !isset($_POST["req_token"])){
+if(!isset($_POST["username"]) || !isset($_POST["password"]) || !isset($_POST["birthday"]) || !isset($_POST["req_token"])){
 	exit;
 }
 
-doRegister($_POST["email"], $_POST["password"], $_POST["birthday"]);
+doRegisterPicaboo($_POST["username"], $_POST["password"]);
 $token = generateToken();
-updateTokenUsingEmail($token, $_POST["email"]);
+updateToken($token, $_POST["username"]);
 
 die(json_encode(array(
 	"logged" => true,

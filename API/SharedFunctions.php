@@ -70,7 +70,7 @@ function doRegister($email, $password, $age, ...$moredata){
 		$sanitisedUsername = strtolower($email);
 		$salt = md5(rand(0, 2147483646));
 		$hashedPassword = password_hash($salt . $password . $salt, PASSWORD_BCRYPT);
-		$UploadUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `PhoneNumber`, `Salt`, `Password`, `AuthToken`) VALUES (NULL, '', '', ?, '', ?, ?, '');");
+		$UploadUserData = $RetrieveDBData->prepare("INSERT INTO `accounts` (`ID`, `Username`, `Nickname`, `Email`, `PhoneNumber`, `Salt`, `Password`, `AuthToken`, `DeviceID`) VALUES (NULL, '', '', ?, '', ?, ?, '', '');");
 		$UploadUserData->bind_param("sss", $email, $salt, $hashedPassword);
 		$UploadUserData->execute();
 	}else{
@@ -121,13 +121,11 @@ function generateToken(){
 
 function isTokenValidReqToken($req_token, $timestamp, $dbToken){
 	include "Config.php";
-	$secret = "iEk21fuwZApXlz93750dmW22pw389dPwOk";
-    $hashPattern = "0001110111101110001111010101111011010001001110011000110001000110";
     $firstHash = hash('sha256', $secret . $dbToken);
     $secondHash = hash('sha256', $timestamp . $secret);
 	$result = "";
-    for ($repeated = 0, $length = strlen($hashPattern); $repeated < $length; $repeated++) {
-        $result .= $hashPattern[$repeated] === '0' ? $firstHash[$repeated] : $secondHash[$repeated];
+    for ($repeated = 0, $length = strlen($pattern); $repeated < $length; $repeated++) {
+        $result .= $pattern[$repeated] === '0' ? $firstHash[$repeated] : $secondHash[$repeated];
     }
 	if($result != $req_token){
 		send401ErrorJSONToClient("You have been logged out! res: $result req: $req_token");
@@ -327,7 +325,7 @@ function updateFriendNickname($getUserData, $friendUsername, $newNickname){
     if($friendshipData["AddedByUsername"] == $getUserData["Username"]){
 	    $placement = 0;
 	}
-	$nicknames[$placement] = $newNickname;
+	$nicknames[$placement] = htmlspecialchars($newNickname);
 	$nicknameJSON = json_encode($nicknames);
 	$RetrieveFriends = $RetrieveDBData->prepare("UPDATE Friends SET NicknamesJSON = '$nicknameJSON' WHERE AddedByUsername = ? && AddedUsername = ? || AddedByUsername = ? && AddedUsername = ? LIMIT 1;");
 	$RetrieveFriends->bind_param("ssss", $friendUsername, $getUserData["Username"], $getUserData["Username"], $friendUsername);
@@ -461,5 +459,25 @@ function getSnapData($ID){ //this uses either the blob id or mediaid
 	$RetrieveSnaps->bind_param("ss", $ID, $ID);
 	$RetrieveSnaps->execute();
 	$snap = $RetrieveSnaps->get_result()->fetch_assoc();
+    return $snap;
+}
+
+function getInBulkUserData($userNames){
+	include "Config.php";
+	$sanitisedUsernames = [];
+	$namesLength = count($userNames);
+
+	for($i = 0; $namesLength > $i; $i++){
+		$username = $userNames[$i];
+		if(ctype_alnum($username)){
+			$sanitisedUsernames[] = '"' . $username . '"';
+		}
+	}
+
+	$sanitisedUsernames = implode(", ", $sanitisedUsernames);
+
+	$RetrieveSnaps = $RetrieveDBData->prepare("SELECT * FROM `accounts` WHERE Username IN (" . $sanitisedUsernames . ") LIMIT 1;");
+	$RetrieveSnaps->execute();
+	$snap = $RetrieveSnaps->get_result()->fetch_all(MYSQLI_ASSOC);
     return $snap;
 }

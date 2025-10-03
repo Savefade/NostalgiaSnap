@@ -20,8 +20,8 @@ $getUsersFriends["friends"][] = array(
 die(json_encode(array(
     "tos_version_5_accepted" => true,
 	"updates_response" => array(
-        "user_id" => 2213213,
-        "laguna_id" => 232323,
+        "user_id" => 1,
+        "laguna_id" => 1,
         "has_used_laguna" => true,
         "current_version_number" => 1,
         "device_token" => "12121-121221-1221212-1212",
@@ -33,7 +33,6 @@ die(json_encode(array(
         "story_count" => 0,
         "display_name" => $getUserData["Nickname"],
         "accepted_terms_of_use_for_version_five" => true,
-        "chats" => array(),
         //
         "bests" => array(
             //"someguy"
@@ -81,7 +80,7 @@ die(json_encode(array(
         "can_view_mature_content" => false,
         "email" => $getUserData["Email"],
         "should_send_text_to_verify_number" => $sendSMSToVerifyNumber,
-        "mobile" => $getUserData["PhoneNumber"],
+        "mobile" => $getUserData["PhoneNumber"]
     ),
     //"identity_check_response" => array(),
     "friends_response" => array(

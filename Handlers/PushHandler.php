@@ -4,7 +4,7 @@ function sendNotification($message, $deviceID){
     include $_SERVER['DOCUMENT_ROOT'] . "/API/Config.php";
     $rInfo = extractRoutingInfo($deviceID);
 
-    if(!$rInfo){
+    if(!$rInfo || !$enableSkyglow){
         return;
     }
 
@@ -28,7 +28,7 @@ function sendNotification($message, $deviceID){
         ]
     ));
 
-    file_get_contents("https://sgnprod.preloading.dev/send", true, $streamContext);
+    file_get_contents($skyglowBaseURL . "/send", true, $streamContext);
 }
 
 function extractRoutingInfo($deviceID){

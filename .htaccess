@@ -1,10 +1,17 @@
 RewriteEngine on
 
-# picaboo (ios 3) #broken atm
+# picaboo (ios 3)
 RewriteRule ^auth$ API/picaboo/Auth/Login.php [L]
 RewriteRule ^refresh$ API/picaboo/Auth/Refresh.php [L]
+RewriteRule ^im$ API/picaboo/Picaboos/IM.php [L]
+RewriteRule ^upload_url$ API/picaboo/Picaboos/UploadURL.php [L]
 
 # picaboo (ios 4) && snapchat 3.X
+RewriteRule ^ss2/auth$ API/ss2/Auth/Login.php [L]
+RewriteRule ^ss2/sync$ API/ss2/Auth/Refresh.php [L]
+RewriteRule ^ss2/blob$ API/ss2/Picaboos/Blob.php [L]
+RewriteRule ^ss2/nsp$ API/ss2/Picaboos/Send.php [L]
+RewriteRule ^upload_url$ API/ss2/Picaboos/UploadURL.php [L]
 
 #snapchat 4.X
 RewriteRule ^ph/login$ API/bq/Auth/Login.php [L]
@@ -28,8 +35,19 @@ RewriteRule ^bq/send$ API/bq/Snaps/Send.php [L]
 RewriteRule ^bq/retry$ API/bq/Snaps/Retry.php [L]
 RewriteRule ^bq/update_snaps$ API/bq/Snaps/UpdateSnaps.php [L]
 RewriteRule ^bq/blob$ API/bq/Snaps/Blob.php [L]
+RewriteRule ^bq/device$ API/bq/Auth/Device.php [L]
 
 # snapchat 7.X - 9.29.0
+RewriteRule ^loq/all_updates$ API/loq/Auth/Refresh.php [L]
+RewriteRule ^loq/conversations$ API/loq/Auth/Refresh.php [L]
+RewriteRule ^loq/register$ API/loq/Auth/Register.php [L]
+RewriteRule ^loq/retry$ API/bq/Snaps/Retry.php [L]
+RewriteRule ^loq/send$ API/bq/Snaps/Send.php [L]
+RewriteRule ^loq/register_username$ API/loq/Auth/RegisterUsername.php [L]
 
 # snapchat 9.29.1 - 10.X
-# yes these ARE going to be supported!
+RewriteRule ^loq/login$ API/loq/Auth/Login.php [L]
+#RewriteRule ^bq/download_profile_data$ API/loq/Auth/Refresh.php [L]
+RewriteRule ^loq/register_v2$ API/loq/Auth/RegisterV2.php [L]
+RewriteRule ^loq/change_email$ API/loq/Settings/ChangeEmail.php [L]
+RewriteRule ^bq/get_captcha$ API/loq/Settings/ChangeEmail.php [L]
